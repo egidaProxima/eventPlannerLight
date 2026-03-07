@@ -1,4 +1,11 @@
-﻿class Program
+﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Internal;
+using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using System.Collections;
+
+class Program
 {
     static void Main()
     {
@@ -140,34 +147,85 @@
                     }
                     else if (mainEnter[1] == "schedules")
                     {
-                        Console.WriteLine("Schedules:  | worker Id | worker Name | worker Surname | event Id | event Adress | event Date | \n");
-                        var schedulesW = db.Schedules.Join(db.Workers, // второй набор
-                            sched => sched.WorkerId, // свойство-селектор объекта из первого набора
-                            worker => worker.Id, // свойство-селектор объекта из второго набора
-                            (sched, worker) => new // результат
-                            {
-                                measureId = sched.MeasureId,
-                                workerId = worker.Id,
-                                name = worker.Name,
-                                surname = worker.Surname
-                            });
-                        var schedulesE = schedulesW.Join(db.Measures, // второй набор
-                            sched => sched.measureId, // свойство-селектор объекта из первого набора
-                            measure => measure.Id, // свойство-селектор объекта из второго набора
-                            (sched, measure) => new // результат
-                            {
-                                measureId = sched.measureId,
-                                workerId = sched.workerId,
-                                name = sched.name,
-                                surname = sched.surname,
-                                date = measure.Date,
-                                adress = measure.Adress
-                            });
-
-                        var list = schedulesE.OrderBy(e => e.workerId).ToList();
-                        foreach (var sched in list)
+                        if (mainEnter.Length > 2 && mainEnter[2] == "by")
                         {
-                            Console.WriteLine($"{sched.workerId} {sched.name} {sched.surname} {sched.measureId} {sched.adress} {sched.date} ");
+                            if (mainEnter[3] == "workers")
+                            {
+                                Console.WriteLine("worker:  | worker Id | worker Name | worker Surname |");
+                                Console.WriteLine("       event:   | event Id | event Adress | event Date |\n");
+
+                                var workers = db.Workers.Select(e => new
+                                {
+                                    id = e.Id,
+                                    name = e.Name,
+                                    surname = e.Surname,
+                                    schedule = (db.Schedules.Where(p => p.WorkerId == e.Id)).ToList(),
+
+                                }).ToList();
+
+                                //Console.WriteLine(workers.GetType().ToString());
+
+                                foreach (var worker in workers)
+                                {
+                                    Console.WriteLine($"{worker.id} {worker.name} {worker.surname}");
+
+                                    foreach (var i in worker.schedule)
+                                    {
+                                        var measure = (from meas in db.Measures where meas.Id == i.MeasureId select meas).ToList();
+                                        Console.WriteLine($"    {measure[0].Id} {measure[0].Adress} {measure[0].Date}");
+                                    }
+                                }
+                            }
+                            else if (mainEnter[3] == "events")
+                            {
+
+                            }
+                            else
+                            {
+                                Console.WriteLine($"error in 4 word of command : " + mainEnter[3]);
+                            }
+                        }
+                        else 
+                        {
+                            Console.WriteLine("Schedules:  | worker Id | worker Name | worker Surname | event Id | event Adress | event Date | \n");
+                            var schedulesW = db.Schedules.Join(db.Workers, // второй набор
+                                sched => sched.WorkerId, // свойство-селектор объекта из первого набора
+                                worker => worker.Id, // свойство-селектор объекта из второго набора
+                                (sched, worker) => new // результат
+                                {
+                                    measureId = sched.MeasureId,
+                                    workerId = worker.Id,
+                                    name = worker.Name,
+                                    surname = worker.Surname
+                                });
+                            var schedulesE = schedulesW.Join(db.Measures, // второй набор
+                                sched => sched.measureId, // свойство-селектор объекта из первого набора
+                                measure => measure.Id, // свойство-селектор объекта из второго набора
+                                (sched, measure) => new // результат
+                                {
+                                    measureId = sched.measureId,
+                                    workerId = sched.workerId,
+                                    name = sched.name,
+                                    surname = sched.surname,
+                                    date = measure.Date,
+                                    adress = measure.Adress
+                                });
+
+                            
+                            var list = schedulesE.OrderBy(e => e.workerId).ToList();
+                            foreach (var sched in list)
+                            {
+                                Console.WriteLine($"{sched.workerId} {sched.name} {sched.surname} {sched.measureId} {sched.adress} {sched.date} ");
+                            }
+                            /*
+                            var groups = list.GroupBy(p => p.workerId);
+                            foreach (var group in groups)
+                            {
+                                foreach (var i in group)
+                                {
+                                    Console.Write($"{i}        ");
+                                }
+                            }*/
                         }
                     }
                 }
