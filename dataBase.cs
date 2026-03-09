@@ -15,7 +15,7 @@ public class ApplicationContext : DbContext
     }
 }
 
-
+[PrimaryKey(nameof(Id))]
 public class Worker
 {
     public int Id { get; set; }
@@ -23,6 +23,7 @@ public class Worker
     public required string Name { get; set; }
     public required string Surname { get; set; }
 }
+[PrimaryKey(nameof(Id))]
 public class Measure
 {
     public int Id { get; set; }
